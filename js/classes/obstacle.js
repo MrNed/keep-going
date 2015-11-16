@@ -9,7 +9,7 @@ var Obstacle = function(game, group, speed) {
 
   var obstacle = game.add.bitmapData(40, 40);
   obstacle.ctx.rect(0, 0, 40, 40);
-  obstacle.ctx.fillStyle = "#FF895D";
+  obstacle.ctx.fillStyle = "#EB586F";
   obstacle.ctx.fill();
 
   Phaser.Sprite.call(this, game, game.world.width * this.posX, this.posY, obstacle);
@@ -17,7 +17,7 @@ var Obstacle = function(game, group, speed) {
 
   this.anchor.set(0.5)
   this.body.static = true;
-  // this.body.immovable = true;
+  this.body.immovable = true;
   this.body.velocity.y = this.speed;
 
   group.add(this);

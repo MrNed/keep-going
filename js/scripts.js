@@ -9,7 +9,7 @@ var Obstacle = function(game, group, speed) {
 
   var obstacle = game.add.bitmapData(40, 40);
   obstacle.ctx.rect(0, 0, 40, 40);
-  obstacle.ctx.fillStyle = "#FF895D";
+  obstacle.ctx.fillStyle = "#EB586F";
   obstacle.ctx.fill();
 
   Phaser.Sprite.call(this, game, game.world.width * this.posX, this.posY, obstacle);
@@ -17,7 +17,7 @@ var Obstacle = function(game, group, speed) {
 
   this.anchor.set(0.5)
   this.body.static = true;
-  // this.body.immovable = true;
+  this.body.immovable = true;
   this.body.velocity.y = this.speed;
 
   group.add(this);
@@ -47,7 +47,7 @@ var Player = function(game, posX, posY) {
 
   var player = game.add.bitmapData(20, 20);
   player.ctx.rect(0, 0, 20, 20);
-  player.ctx.fillStyle = "#00ADB5";
+  player.ctx.fillStyle = "#D8E9F0";
   player.ctx.fill();
 
   Phaser.Sprite.call(this, game, game.world.width * this.pos, posY, player);
@@ -55,6 +55,7 @@ var Player = function(game, posX, posY) {
 
   this.anchor.set(0.5)
   this.body.static = true;
+  // this.body.immovable = true;
   this.body.allowRotation = false;
   this.body.moves = false;
 
@@ -91,8 +92,11 @@ Player.prototype.move = function() {
 
 Player.prototype.hit = function() {
 
+  if (this.moveTween) {
+    this.moveTween.stop();
+  }
+
   this.canMove = false;
-  this.moveTween.stop();
 
 };
 var BasicGame = {};
@@ -129,8 +133,8 @@ BasicGame.Game = function(game) {
 
   this.player = null;
   this.obstacles = null;
-  this.obstacleSpeed = 250;
-  this.obstacleDelay = 500;
+  this.obstacleSpeed = 350;
+  this.obstacleDelay = 300;
   this.stop = false;
 };
 

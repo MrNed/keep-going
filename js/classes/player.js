@@ -5,7 +5,7 @@ var Player = function(game, posX, posY) {
 
   var player = game.add.bitmapData(20, 20);
   player.ctx.rect(0, 0, 20, 20);
-  player.ctx.fillStyle = "#00ADB5";
+  player.ctx.fillStyle = "#D8E9F0";
   player.ctx.fill();
 
   Phaser.Sprite.call(this, game, game.world.width * this.pos, posY, player);
@@ -13,6 +13,7 @@ var Player = function(game, posX, posY) {
 
   this.anchor.set(0.5)
   this.body.static = true;
+  // this.body.immovable = true;
   this.body.allowRotation = false;
   this.body.moves = false;
 
@@ -49,7 +50,10 @@ Player.prototype.move = function() {
 
 Player.prototype.hit = function() {
 
+  if (this.moveTween) {
+    this.moveTween.stop();
+  }
+
   this.canMove = false;
-  this.moveTween.stop();
 
 };

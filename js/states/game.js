@@ -2,8 +2,8 @@ BasicGame.Game = function(game) {
 
   this.player = null;
   this.obstacles = null;
-  this.obstacleSpeed = 250;
-  this.obstacleDelay = 500;
+  this.obstacleSpeed = 350;
+  this.obstacleDelay = 300;
   this.stop = false;
 };
 
