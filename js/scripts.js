@@ -1,26 +1,20 @@
-var Obstacle = function(game, group, speed) {
+var Obstacle = function(game) {
 
-  this.speed = speed;
   this.posY = -80;
-
-  var posArr = [0.25, 0.5, 0.75];
-
-  this.posX = posArr[game.rnd.between(0, 2)];
 
   var obstacle = game.add.bitmapData(40, 40);
   obstacle.ctx.rect(0, 0, 40, 40);
   obstacle.ctx.fillStyle = "#EB586F";
   obstacle.ctx.fill();
 
-  Phaser.Sprite.call(this, game, game.world.width * this.posX, this.posY, obstacle);
+  Phaser.Sprite.call(this, game, 0, this.posY, obstacle);
   game.physics.arcade.enable(this);
 
   this.anchor.set(0.5)
   this.body.static = true;
   this.body.immovable = true;
-  this.body.velocity.y = this.speed;
 
-  group.add(this);
+  this.exists = false;
 
 };
 
@@ -30,7 +24,7 @@ Obstacle.prototype.constructor = Obstacle;
 Obstacle.prototype.update = function() {
 
   if (this.y - this.body.halfHeight > game.height) {
-    this.destroy();
+    this.kill();
   }
 
 };
@@ -38,6 +32,87 @@ Obstacle.prototype.update = function() {
 Obstacle.prototype.stop = function() {
 
   this.body.velocity.y = 0;
+
+};
+
+Obstacle.prototype.spawn = function(posX, speed) {
+
+  this.reset(posX, this.posY);
+  this.body.velocity.y = speed;
+
+};
+var Obstacles = function (game) {
+
+  Phaser.Group.call(this, game, game.world, 'Obstacles', false, true, Phaser.Physics.ARCADE);
+
+  this.posArr = [0.25, 0.5, 0.75];
+  this.obstacleSpeed = 350;
+  this.obstacleDelay = 300;
+
+  this.nextSpawn = 0;
+/*
+  this.minSpawnRate = 1000;
+  this.maxSpawnRate = 1800;
+  this.minSpeed = 200;
+  this.maxSpeed = 400;
+
+  this.spawnSpeed = 0;
+  this.spawnRate = 0;
+  this.spawnX = 0;
+*/
+
+  var i = 0;
+  for (i; i < 10; i++) {
+    this.add(new Obstacle(game));
+  }
+
+  return this;
+
+};
+
+Obstacles.prototype = Object.create(Phaser.Group.prototype);
+Obstacles.prototype.constructor = Obstacles;
+
+Obstacles.prototype.spawn = function () {
+
+  if (this.game.time.time < this.nextSpawn) {
+    return;
+  }
+
+  // RANDOMIZE Obstacles - PROBABLY CAN BE DONE BETTER
+  // this.children.sort(function() { return 0.5 - Math.random() });
+
+  // this.spawnSpeed = game.rnd.integerInRange(this.minSpeed, this.maxSpeed);
+  // this.spawnRate = game.rnd.integerInRange(this.minSpawnRate, this.maxSpawnRate);
+
+
+  this.posX = this.posArr[game.rnd.between(0, 2)] * game.world.width;
+
+  this.getFirstExists(false).spawn(this.posX, this.obstacleSpeed);
+
+  this.nextSpawn = this.game.time.time + this.obstacleDelay;
+
+};
+
+Obstacles.prototype.stop = function() {
+
+  this.forEach(function(obstacle) {
+    obstacle.stop();
+  });
+
+};
+
+Obstacles.prototype.countOnScreen = function() {
+
+  var test = 0;
+
+  this.forEach(function(obstacle) {
+    if (obstacle.exists) {
+      test++;
+    }
+  });
+
+  return test;
 
 };
 var Player = function(game, posX, posY) {
@@ -55,7 +130,6 @@ var Player = function(game, posX, posY) {
 
   this.anchor.set(0.5)
   this.body.static = true;
-  // this.body.immovable = true;
   this.body.allowRotation = false;
   this.body.moves = false;
 
@@ -133,9 +207,8 @@ BasicGame.Game = function(game) {
 
   this.player = null;
   this.obstacles = null;
-  this.obstacleSpeed = 350;
-  this.obstacleDelay = 300;
   this.stop = false;
+
 };
 
 BasicGame.Game.prototype = {
@@ -153,13 +226,8 @@ BasicGame.Game.prototype = {
 
     var self = this;
 
-    self.player = new Player(game, 0.5, game.world.height - 50);
-
-    self.obstacles = game.add.group();
-
-    game.time.events.loop(self.obstacleDelay, function() {
-      new Obstacle(game, self.obstacles, self.obstacleSpeed);
-    });
+    self.player = new Player(game, 0.5, game.world.height - 75);
+    self.obstacles = new Obstacles(game);
 
     game.input.onDown.add(self.player.move, self.player);
 
@@ -169,13 +237,17 @@ BasicGame.Game.prototype = {
 
     var self = this;
 
+    if (!self.stop) {
+      self.obstacles.spawn();
+    }
+
     game.physics.arcade.collide(self.player, self.obstacles, function() {
-      game.time.events.stop();
+      self.stop = true;
 
       self.player.hit();
-      self.obstacles.forEach(function(obstacle) {
-        obstacle.stop();
-      });
+      self.obstacles.stop();
+
+      self.state.start('Game', true, false, self.config);
     });
 
   },
@@ -184,6 +256,7 @@ BasicGame.Game.prototype = {
 
     this.player = null;
     this.obstacles = null;
+    this.stop = false;
 
   }
 

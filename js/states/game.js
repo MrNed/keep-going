@@ -2,9 +2,8 @@ BasicGame.Game = function(game) {
 
   this.player = null;
   this.obstacles = null;
-  this.obstacleSpeed = 350;
-  this.obstacleDelay = 300;
   this.stop = false;
+
 };
 
 BasicGame.Game.prototype = {
@@ -22,13 +21,8 @@ BasicGame.Game.prototype = {
 
     var self = this;
 
-    self.player = new Player(game, 0.5, game.world.height - 50);
-
-    self.obstacles = game.add.group();
-
-    game.time.events.loop(self.obstacleDelay, function() {
-      new Obstacle(game, self.obstacles, self.obstacleSpeed);
-    });
+    self.player = new Player(game, 0.5, game.world.height - 75);
+    self.obstacles = new Obstacles(game);
 
     game.input.onDown.add(self.player.move, self.player);
 
@@ -38,13 +32,17 @@ BasicGame.Game.prototype = {
 
     var self = this;
 
+    if (!self.stop) {
+      self.obstacles.spawn();
+    }
+
     game.physics.arcade.collide(self.player, self.obstacles, function() {
-      game.time.events.stop();
+      self.stop = true;
 
       self.player.hit();
-      self.obstacles.forEach(function(obstacle) {
-        obstacle.stop();
-      });
+      self.obstacles.stop();
+
+      self.state.start('Game', true, false, self.config);
     });
 
   },
@@ -53,6 +51,7 @@ BasicGame.Game.prototype = {
 
     this.player = null;
     this.obstacles = null;
+    this.stop = false;
 
   }
 

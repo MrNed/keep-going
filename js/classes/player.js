@@ -13,7 +13,6 @@ var Player = function(game, posX, posY) {
 
   this.anchor.set(0.5)
   this.body.static = true;
-  // this.body.immovable = true;
   this.body.allowRotation = false;
   this.body.moves = false;
 
