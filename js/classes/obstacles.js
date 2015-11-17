@@ -7,16 +7,8 @@ var Obstacles = function (game) {
   this.obstacleDelay = 300;
 
   this.nextSpawn = 0;
-/*
-  this.minSpawnRate = 1000;
-  this.maxSpawnRate = 1800;
-  this.minSpeed = 200;
-  this.maxSpeed = 400;
-
-  this.spawnSpeed = 0;
-  this.spawnRate = 0;
-  this.spawnX = 0;
-*/
+  this.minDelay = 200;
+  this.maxDelay = 600;
 
   var i = 0;
   for (i; i < 10; i++) {
@@ -36,16 +28,13 @@ Obstacles.prototype.spawn = function () {
     return;
   }
 
-  // RANDOMIZE Obstacles - PROBABLY CAN BE DONE BETTER
-  // this.children.sort(function() { return 0.5 - Math.random() });
-
-  // this.spawnSpeed = game.rnd.integerInRange(this.minSpeed, this.maxSpeed);
-  // this.spawnRate = game.rnd.integerInRange(this.minSpawnRate, this.maxSpawnRate);
-
-
+  this.obstacleDelay = game.rnd.integerInRange(this.minDelay, this.maxDelay);
   this.posX = this.posArr[game.rnd.between(0, 2)] * game.world.width;
 
   this.getFirstExists(false).spawn(this.posX, this.obstacleSpeed);
+
+  this.obstacleSpeed += 1;
+  this.maxDelay -= 2;
 
   this.nextSpawn = this.game.time.time + this.obstacleDelay;
 

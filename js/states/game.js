@@ -2,7 +2,9 @@ BasicGame.Game = function(game) {
 
   this.player = null;
   this.obstacles = null;
-  this.stop = false;
+  this.stop = true;
+  this.timer = null;
+  this.spawnDelay = 1000;
 
 };
 
@@ -26,6 +28,12 @@ BasicGame.Game.prototype = {
 
     game.input.onDown.add(self.player.move, self.player);
 
+    self.timer = new Phaser.Timer(game);
+    self.timer.add(self.spawnDelay, function() {
+      self.stop = false;
+    });
+    self.timer.start();
+
   },
 
   update: function() {
@@ -34,6 +42,8 @@ BasicGame.Game.prototype = {
 
     if (!self.stop) {
       self.obstacles.spawn();
+    } else {
+      self.timer.update(game.time.time);
     }
 
     game.physics.arcade.collide(self.player, self.obstacles, function() {
@@ -49,9 +59,12 @@ BasicGame.Game.prototype = {
 
   shutdown: function() {
 
-    this.player = null;
-    this.obstacles = null;
-    this.stop = false;
+    game.input.onDown.removeAll();
+    game.time.events.remove(self.timer);
+
+    this.player.destroy();
+    this.obstacles.destroy();
+    this.stop = true;
 
   }
 
