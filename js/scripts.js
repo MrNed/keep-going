@@ -45,7 +45,6 @@ var Obstacles = function (game) {
 
   Phaser.Group.call(this, game, game.world, 'Obstacles', false, true, Phaser.Physics.ARCADE);
 
-  this.posArr = [0.25, 0.5, 0.75];
   this.obstacleSpeed = 350;
   this.obstacleDelay = 300;
 
@@ -67,14 +66,24 @@ Obstacles.prototype.constructor = Obstacles;
 
 Obstacles.prototype.spawn = function () {
 
+  this.posArr = [0.25, 0.5, 0.75];
+
   if (this.game.time.time < this.nextSpawn) {
     return;
   }
 
   this.obstacleDelay = game.rnd.integerInRange(this.minDelay, this.maxDelay);
-  this.posX = this.posArr[game.rnd.between(0, 2)] * game.world.width;
+
+  var index = Math.floor(Math.random() * this.posArr.length);
+  this.posX = this.posArr[index] * game.world.width;
 
   this.getFirstExists(false).spawn(this.posX, this.obstacleSpeed);
+
+  if (Math.random() <= 0.1) {
+    this.posArr.splice(index, 1);
+
+    this.getFirstExists(false).spawn(this.posArr[Math.floor(Math.random() * this.posArr.length)] * game.world.width, this.obstacleSpeed);
+  }
 
   this.obstacleSpeed += 1;
   this.maxDelay -= 2;
@@ -90,24 +99,11 @@ Obstacles.prototype.stop = function() {
   });
 
 };
-
-Obstacles.prototype.countOnScreen = function() {
-
-  var test = 0;
-
-  this.forEach(function(obstacle) {
-    if (obstacle.exists) {
-      test++;
-    }
-  });
-
-  return test;
-
-};
 var Player = function(game, posX, posY) {
 
   this.canMove = true;
   this.pos = posX;
+  this.moveDuration = 200;
 
   var player = game.add.bitmapData(20, 20);
   player.ctx.rect(0, 0, 20, 20);
@@ -144,7 +140,7 @@ Player.prototype.move = function() {
 
       this.canMove = false;
 
-      this.moveTween = game.add.tween(this).to({x: game.world.width * this.pos}, 200, Phaser.Easing.Linear.None, true);
+      this.moveTween = game.add.tween(this).to({x: game.world.width * this.pos}, this.moveDuration, Phaser.Easing.Linear.None, true);
 
       this.moveTween.onComplete.add(function() {
         this.canMove = true;
@@ -160,6 +156,14 @@ Player.prototype.hit = function() {
   }
 
   this.canMove = false;
+
+};
+
+Player.prototype.incraseSpeed = function() {
+
+  if (this.moveDuration >= 100) {
+    this.moveDuration -= 0.025;
+  }
 
 };
 var BasicGame = {};
@@ -236,6 +240,7 @@ BasicGame.Game.prototype = {
 
     if (!self.stop) {
       self.obstacles.spawn();
+      self.player.incraseSpeed();
     } else {
       self.timer.update(game.time.time);
     }

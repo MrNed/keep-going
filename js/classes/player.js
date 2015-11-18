@@ -2,6 +2,7 @@ var Player = function(game, posX, posY) {
 
   this.canMove = true;
   this.pos = posX;
+  this.moveDuration = 200;
 
   var player = game.add.bitmapData(20, 20);
   player.ctx.rect(0, 0, 20, 20);
@@ -38,7 +39,7 @@ Player.prototype.move = function() {
 
       this.canMove = false;
 
-      this.moveTween = game.add.tween(this).to({x: game.world.width * this.pos}, 200, Phaser.Easing.Linear.None, true);
+      this.moveTween = game.add.tween(this).to({x: game.world.width * this.pos}, this.moveDuration, Phaser.Easing.Linear.None, true);
 
       this.moveTween.onComplete.add(function() {
         this.canMove = true;
@@ -54,5 +55,13 @@ Player.prototype.hit = function() {
   }
 
   this.canMove = false;
+
+};
+
+Player.prototype.incraseSpeed = function() {
+
+  if (this.moveDuration >= 100) {
+    this.moveDuration -= 0.025;
+  }
 
 };

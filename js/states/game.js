@@ -42,6 +42,7 @@ BasicGame.Game.prototype = {
 
     if (!self.stop) {
       self.obstacles.spawn();
+      self.player.incraseSpeed();
     } else {
       self.timer.update(game.time.time);
     }
