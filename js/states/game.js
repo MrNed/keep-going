@@ -43,19 +43,19 @@ BasicGame.Game.prototype = {
     if (!self.stop) {
       self.obstacles.spawn();
       self.player.incraseSpeed();
+
+      game.physics.arcade.collide(self.player, self.obstacles, function() {
+        self.stop = true;
+
+        self.player.hit();
+        self.obstacles.stop();
+
+        // self.debugProperties();
+        self.state.start('Game', true, false, self.config);
+      });
     } else {
       self.timer.update(game.time.time);
     }
-
-    game.physics.arcade.collide(self.player, self.obstacles, function() {
-      self.stop = true;
-
-      self.player.hit();
-      self.obstacles.stop();
-
-      self.state.start('Game', true, false, self.config);
-    });
-
   },
 
   shutdown: function() {
@@ -66,6 +66,17 @@ BasicGame.Game.prototype = {
     this.player.destroy();
     this.obstacles.destroy();
     this.stop = true;
+
+  },
+
+  debugProperties: function() {
+
+    var self = this;
+
+    console.log(self.obstacles.secondSpawnChance);
+    console.log(self.obstacles.obstacleSpeed);
+    console.log(self.obstacles.obstacleDelay);
+    console.log(self.player.moveDuration);
 
   }
 

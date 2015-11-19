@@ -45,12 +45,11 @@ var Obstacles = function (game) {
 
   Phaser.Group.call(this, game, game.world, 'Obstacles', false, true, Phaser.Physics.ARCADE);
 
-  this.obstacleSpeed = 350;
-  this.obstacleDelay = 300;
+  this.obstacleSpeed = 450;
+  this.obstacleDelay = 500;
+  this.secondSpawnChance = 0.1;
 
   this.nextSpawn = 0;
-  this.minDelay = 200;
-  this.maxDelay = 600;
 
   var i = 0;
   for (i; i < 10; i++) {
@@ -72,23 +71,30 @@ Obstacles.prototype.spawn = function () {
     return;
   }
 
-  this.obstacleDelay = game.rnd.integerInRange(this.minDelay, this.maxDelay);
-
   var index = Math.floor(Math.random() * this.posArr.length);
   this.posX = this.posArr[index] * game.world.width;
 
   this.getFirstExists(false).spawn(this.posX, this.obstacleSpeed);
 
-  if (Math.random() <= 0.1) {
+  if (Math.random() <= this.secondSpawnChance) {
     this.posArr.splice(index, 1);
 
     this.getFirstExists(false).spawn(this.posArr[Math.floor(Math.random() * this.posArr.length)] * game.world.width, this.obstacleSpeed);
   }
 
-  this.obstacleSpeed += 1;
-  this.maxDelay -= 2;
-
   this.nextSpawn = this.game.time.time + this.obstacleDelay;
+
+  if (this.obstacleSpeed <= 580) {
+    this.obstacleSpeed += 2;
+  }
+
+  if (this.obstacleDelay >= 300) {
+    this.obstacleDelay -= 2.5;
+  }
+
+  if (this.secondSpawnChance <= 0.5) {
+    this.secondSpawnChance += 0.005;
+  }
 
 };
 
@@ -103,7 +109,7 @@ var Player = function(game, posX, posY) {
 
   this.canMove = true;
   this.pos = posX;
-  this.moveDuration = 200;
+  this.moveDuration = 150;
 
   var player = game.add.bitmapData(20, 20);
   player.ctx.rect(0, 0, 20, 20);
@@ -241,19 +247,19 @@ BasicGame.Game.prototype = {
     if (!self.stop) {
       self.obstacles.spawn();
       self.player.incraseSpeed();
+
+      game.physics.arcade.collide(self.player, self.obstacles, function() {
+        self.stop = true;
+
+        self.player.hit();
+        self.obstacles.stop();
+
+        // self.debugProperties();
+        self.state.start('Game', true, false, self.config);
+      });
     } else {
       self.timer.update(game.time.time);
     }
-
-    game.physics.arcade.collide(self.player, self.obstacles, function() {
-      self.stop = true;
-
-      self.player.hit();
-      self.obstacles.stop();
-
-      self.state.start('Game', true, false, self.config);
-    });
-
   },
 
   shutdown: function() {
@@ -264,6 +270,17 @@ BasicGame.Game.prototype = {
     this.player.destroy();
     this.obstacles.destroy();
     this.stop = true;
+
+  },
+
+  debugProperties: function() {
+
+    var self = this;
+
+    console.log(self.obstacles.secondSpawnChance);
+    console.log(self.obstacles.obstacleSpeed);
+    console.log(self.obstacles.obstacleDelay);
+    console.log(self.player.moveDuration);
 
   }
 

@@ -2,7 +2,7 @@ var Player = function(game, posX, posY) {
 
   this.canMove = true;
   this.pos = posX;
-  this.moveDuration = 200;
+  this.moveDuration = 150;
 
   var player = game.add.bitmapData(20, 20);
   player.ctx.rect(0, 0, 20, 20);
