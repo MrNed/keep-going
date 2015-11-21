@@ -22,6 +22,12 @@ BasicGame.Boot.prototype = {
   create: function() {
 
     this.stage.backgroundColor = '#393E46';
+    this.fontLoad = game.add.text(game.world.centerX, game.world.centerY, " a ", {
+        font: "200px",
+        fill: "#fff",
+    });
+    this.fontLoad.visible = false;
+    this.fontLoad.font = 'exo';
 
     this.state.start('Preload');
 

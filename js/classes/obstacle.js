@@ -1,10 +1,18 @@
-var Obstacle = function(game) {
+var Obstacle = function(game, type) {
 
   this.posY = -80;
 
-  var obstacle = game.add.bitmapData(40, 40);
-  obstacle.ctx.rect(0, 0, 40, 40);
-  obstacle.ctx.fillStyle = "#EB586F";
+  var obstacle = game.add.bitmapData(36, 36);
+  obstacle.ctx.rect(0, 0, 36, 36);
+
+  if (type === 'point') {
+    obstacle.ctx.fillStyle = "#4AA0D5";
+    this.obstacleType = 1;
+  } else {
+    obstacle.ctx.fillStyle = "#EB586F";
+    this.obstacleType = 0;
+  }
+
   obstacle.ctx.fill();
 
   Phaser.Sprite.call(this, game, 0, this.posY, obstacle);

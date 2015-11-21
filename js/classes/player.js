@@ -2,10 +2,10 @@ var Player = function(game, posX, posY) {
 
   this.canMove = true;
   this.pos = posX;
-  this.moveDuration = 150;
+  this.moveDuration = 100;
 
-  var player = game.add.bitmapData(20, 20);
-  player.ctx.rect(0, 0, 20, 20);
+  var player = game.add.bitmapData(18, 18);
+  player.ctx.rect(0, 0, 18, 18);
   player.ctx.fillStyle = "#D8E9F0";
   player.ctx.fill();
 
@@ -60,7 +60,7 @@ Player.prototype.hit = function() {
 
 Player.prototype.incraseSpeed = function() {
 
-  if (this.moveDuration >= 100) {
+  if (this.moveDuration > 100) {
     this.moveDuration -= 0.025;
   }
 

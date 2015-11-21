@@ -1,10 +1,18 @@
-var Obstacle = function(game) {
+var Obstacle = function(game, type) {
 
   this.posY = -80;
 
-  var obstacle = game.add.bitmapData(40, 40);
-  obstacle.ctx.rect(0, 0, 40, 40);
-  obstacle.ctx.fillStyle = "#EB586F";
+  var obstacle = game.add.bitmapData(36, 36);
+  obstacle.ctx.rect(0, 0, 36, 36);
+
+  if (type === 'point') {
+    obstacle.ctx.fillStyle = "#4AA0D5";
+    this.obstacleType = 1;
+  } else {
+    obstacle.ctx.fillStyle = "#EB586F";
+    this.obstacleType = 0;
+  }
+
   obstacle.ctx.fill();
 
   Phaser.Sprite.call(this, game, 0, this.posY, obstacle);
@@ -41,78 +49,14 @@ Obstacle.prototype.spawn = function(posX, speed) {
   this.body.velocity.y = speed;
 
 };
-var Obstacles = function (game) {
-
-  Phaser.Group.call(this, game, game.world, 'Obstacles', false, true, Phaser.Physics.ARCADE);
-
-  this.obstacleSpeed = 450;
-  this.obstacleDelay = 500;
-  this.secondSpawnChance = 0.1;
-
-  this.nextSpawn = 0;
-
-  var i = 0;
-  for (i; i < 10; i++) {
-    this.add(new Obstacle(game));
-  }
-
-  return this;
-
-};
-
-Obstacles.prototype = Object.create(Phaser.Group.prototype);
-Obstacles.prototype.constructor = Obstacles;
-
-Obstacles.prototype.spawn = function () {
-
-  this.posArr = [0.25, 0.5, 0.75];
-
-  if (this.game.time.time < this.nextSpawn) {
-    return;
-  }
-
-  var index = Math.floor(Math.random() * this.posArr.length);
-  this.posX = this.posArr[index] * game.world.width;
-
-  this.getFirstExists(false).spawn(this.posX, this.obstacleSpeed);
-
-  if (Math.random() <= this.secondSpawnChance) {
-    this.posArr.splice(index, 1);
-
-    this.getFirstExists(false).spawn(this.posArr[Math.floor(Math.random() * this.posArr.length)] * game.world.width, this.obstacleSpeed);
-  }
-
-  this.nextSpawn = this.game.time.time + this.obstacleDelay;
-
-  if (this.obstacleSpeed <= 580) {
-    this.obstacleSpeed += 2;
-  }
-
-  if (this.obstacleDelay >= 300) {
-    this.obstacleDelay -= 2.5;
-  }
-
-  if (this.secondSpawnChance <= 0.5) {
-    this.secondSpawnChance += 0.005;
-  }
-
-};
-
-Obstacles.prototype.stop = function() {
-
-  this.forEach(function(obstacle) {
-    obstacle.stop();
-  });
-
-};
 var Player = function(game, posX, posY) {
 
   this.canMove = true;
   this.pos = posX;
-  this.moveDuration = 150;
+  this.moveDuration = 100;
 
-  var player = game.add.bitmapData(20, 20);
-  player.ctx.rect(0, 0, 20, 20);
+  var player = game.add.bitmapData(18, 18);
+  player.ctx.rect(0, 0, 18, 18);
   player.ctx.fillStyle = "#D8E9F0";
   player.ctx.fill();
 
@@ -167,9 +111,64 @@ Player.prototype.hit = function() {
 
 Player.prototype.incraseSpeed = function() {
 
-  if (this.moveDuration >= 100) {
+  if (this.moveDuration > 100) {
     this.moveDuration -= 0.025;
   }
+
+};
+var Spawn = function (game) {
+
+  Phaser.Group.call(this, game, game.world, 'Spawn', false, true, Phaser.Physics.ARCADE);
+
+  this.speed = 500;
+  this.delay = 375;
+  this.chanceForSecond = 0.8;
+  this.nextSpawn = 0;
+
+  var i = 0;
+  for (i; i < 10; i++) {
+    this.add(new Obstacle(game, 'enemy'));
+  }
+
+  this.add(new Obstacle(game, 'point'));
+
+  return this;
+
+};
+
+Spawn.prototype = Object.create(Phaser.Group.prototype);
+Spawn.prototype.constructor = Spawn;
+
+Spawn.prototype.start = function () {
+
+  this.posArr = [0.25, 0.5, 0.75];
+
+  if (this.game.time.time < this.nextSpawn) {
+    return;
+  }
+
+  var index = Math.floor(Math.random() * this.posArr.length);
+  this.posX = this.posArr[index] * game.world.width;
+
+  this.children.sort(function() { return 0.5 - Math.random() });
+
+  this.getFirstExists(false).spawn(this.posX, this.speed);
+
+  if (Math.random() <= this.chanceForSecond) {
+    this.posArr.splice(index, 1);
+
+    this.getFirstExists(false).spawn(this.posArr[Math.floor(Math.random() * this.posArr.length)] * game.world.width, this.speed);
+  }
+
+  this.nextSpawn = this.game.time.time + this.delay;
+
+};
+
+Spawn.prototype.stop = function() {
+
+  this.forEach(function(obstacle) {
+    obstacle.stop();
+  });
 
 };
 var BasicGame = {};
@@ -196,6 +195,12 @@ BasicGame.Boot.prototype = {
   create: function() {
 
     this.stage.backgroundColor = '#393E46';
+    this.fontLoad = game.add.text(game.world.centerX, game.world.centerY, " a ", {
+        font: "200px",
+        fill: "#fff",
+    });
+    this.fontLoad.visible = false;
+    this.fontLoad.font = 'exo';
 
     this.state.start('Preload');
 
@@ -205,10 +210,11 @@ BasicGame.Boot.prototype = {
 BasicGame.Game = function(game) {
 
   this.player = null;
-  this.obstacles = null;
+  this.spawn = null;
   this.stop = true;
   this.timer = null;
   this.spawnDelay = 1000;
+  this.points = 0;
 
 };
 
@@ -227,8 +233,17 @@ BasicGame.Game.prototype = {
 
     var self = this;
 
-    self.player = new Player(game, 0.5, game.world.height - 75);
-    self.obstacles = new Obstacles(game);
+    self.score = game.add.text(game.world.width - 25, 25, 0 + " ", {
+        font: "24px",
+        fill: "#D8E9F0",
+    });
+
+    self.score.font = 'exo';
+    self.score.anchor.setTo(0.5);
+    // self.score.smoothed = self.smusso;
+
+    self.player = new Player(game, 0.5, game.world.height - 64);
+    self.spawn = new Spawn(game);
 
     game.input.onDown.add(self.player.move, self.player);
 
@@ -245,17 +260,15 @@ BasicGame.Game.prototype = {
     var self = this;
 
     if (!self.stop) {
-      self.obstacles.spawn();
+      self.spawn.start();
       self.player.incraseSpeed();
 
-      game.physics.arcade.collide(self.player, self.obstacles, function() {
-        self.stop = true;
-
-        self.player.hit();
-        self.obstacles.stop();
-
-        // self.debugProperties();
-        self.state.start('Game', true, false, self.config);
+      game.physics.arcade.collide(self.player, self.spawn, function(player, obstacle) {
+        if (obstacle.obstacleType == 1) {
+          self.getPoint(obstacle);
+        } else {
+          self.die();
+        }
       });
     } else {
       self.timer.update(game.time.time);
@@ -265,11 +278,32 @@ BasicGame.Game.prototype = {
   shutdown: function() {
 
     game.input.onDown.removeAll();
-    game.time.events.remove(self.timer);
+    game.time.events.remove(this.timer);
 
-    this.player.destroy();
-    this.obstacles.destroy();
+    this.player = null;
+    this.spawn = null;
     this.stop = true;
+    this.points = 0;
+
+  },
+
+  die: function() {
+
+    this.stop = true;
+
+    this.player.hit();
+    this.spawn.stop();
+
+    // self.debugProperties();
+    this.state.start('Game', true, false, this.config);
+
+  },
+
+  getPoint: function(obstacle) {
+
+    obstacle.kill();
+    this.points++;
+    this.score.text = this.points.toString();
 
   },
 
@@ -277,9 +311,9 @@ BasicGame.Game.prototype = {
 
     var self = this;
 
-    console.log(self.obstacles.secondSpawnChance);
-    console.log(self.obstacles.obstacleSpeed);
-    console.log(self.obstacles.obstacleDelay);
+    console.log(self.spawn.secondSpawnChance);
+    console.log(self.spawn.spawnpeed);
+    console.log(self.spawn.obstacleDelay);
     console.log(self.player.moveDuration);
 
   }
@@ -367,7 +401,7 @@ BasicGame.Preload.prototype = {
   }
 
 };
-var game = new Phaser.Game(300, 420, Phaser.Canvas, 'game_cont');
+var game = new Phaser.Game(300, 420, Phaser.AUTO, 'game_cont');
 
 game.state.add('Boot', BasicGame.Boot);
 game.state.add('Preload', BasicGame.Preload);
